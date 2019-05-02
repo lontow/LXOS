@@ -1,0 +1,18 @@
+CR4_PSE equ 0x00000010 
+CR0_PG  equ  0x80000000
+CR0_WP  equ 0x00010000
+KSTACKSIZE equ 4096
+[bits 32]
+[extern kernel_main]
+global _start
+_start:
+	;turn on page extension
+	mov eax,cr4
+	or eax,CR4_PSE
+	mov cr4,eax
+	;set page directory
+	;turn on paging
+	;
+
+	call kernel_main
+jmp $
