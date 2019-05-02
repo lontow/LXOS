@@ -53,6 +53,7 @@ extern void irq12();
 extern void irq13();
 extern void irq14();
 extern void irq15();
+extern void irq64();
 
 #define IRQ0 32
 #define IRQ1 33
@@ -70,6 +71,7 @@ extern void irq15();
 #define IRQ13 45
 #define IRQ14 46
 #define IRQ15 47
+#define IRQ64 64
 
 typedef struct {
 	uint32_t edi,esi,ebp,useless,ebx,edx,ecx,eax;
@@ -79,8 +81,8 @@ typedef struct {
 }registers_t_bak;
 
 typedef struct {
-	uint32_t ds,es,fs,gs;
 	uint32_t edi,esi,ebp,useless,ebx,edx,ecx,eax;
+	uint32_t ds,es,fs,gs;
 	uint32_t int_no,err_code;
 	uint32_t eip,cs,eflags,esp,ss;
 }registers_t;

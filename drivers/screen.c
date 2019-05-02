@@ -105,7 +105,7 @@ void kprintf(const char* fmt,...){
 			  kprintint(va_arg(arg,int),10,0);
 			  break;
 			  case 'x':
-			  kprintint(va_arg(arg,int),16,1);
+			  kprintint(va_arg(arg,int),16,0);
 			  break;
 			}
 			}else{

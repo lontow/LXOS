@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "vm.h"
 #include "../cpu/isr.h"
+#include "x86.h"
 
 struct {
 	struct proc proc[NPROC];
@@ -15,9 +16,15 @@ static struct proc *initproc;
 int nextpid=1;
 extern void forkret(void);
 extern void trapret(void);
+extern void swtch(struct context **old, struct context *new);
+extern void swtch1(struct context *new);
 //static void wakeup1(void *chan);
 
 //TODO: 当前进程
+static struct proc *curproc=0;
+struct proc * getcurproc(void){
+	return curproc;
+}
 
 //寻找一个 UNUSED 状态的进程，进行初始化 EMBYRO
 static struct proc* allocproc(void){
@@ -50,8 +57,40 @@ static struct proc* allocproc(void){
 	return 0;
 }
 
-void
-uinit(void)
+//调度
+void scheduler(void)
+{
+  struct proc *p;
+  
+  for(;;){
+    // 打开中断
+    sti();
+
+    // Loop over process table looking for process to run.
+ //   acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      switchuvm(p);
+      p->state = RUNNING;
+	  curproc=p;
+//	  if(p->pid==1) swtch1(p->context); 
+//	  else
+      swtch(&curproc->context, p->context);
+//      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+    }
+    //release(&ptable.lock);
+
+  }
+}
+void uinit(void)
 {
   struct proc *p;
   extern char _binary_init_start[], _binary_init_size[];
@@ -63,13 +102,12 @@ uinit(void)
     kprint("userinit: out of memory?");
   inituvm(p->pgdir, _binary_init_start, (int)_binary_init_size);
   p->sz = PGSIZE;
-  kprintf("get p:\naddr:%x\n",&p,&p->pgdir);
   memset(p->tf, 0, sizeof(*p->tf));
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
   p->tf->es = p->tf->ds;
   p->tf->ss = p->tf->ds;
-  //p->tf->eflags = FL_IF;
+  p->tf->eflags = EFL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of init.S
 
@@ -85,6 +123,10 @@ uinit(void)
   p->state = RUNNABLE;
 
  // release(&ptable.lock);
+  kprintf("initialized:get proc:%x ;pggir addr:%x\n",&p,&p->pgdir);
+  isr_install();
+  kprintf("set IDT  done!\nscheduler.....\n");
+  scheduler();
 }
 
 void forkret(void){

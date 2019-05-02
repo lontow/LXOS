@@ -1,10 +1,12 @@
 #include "isr.h"
 #include "idt.h"
+#include "x86.h"
 #include "screen.h"
 #include "keyboard.h"
 #include "../libc/string.h"
 #include "ports.h"
 #include "timer.h"
+#include "syscall.h"
 
 isr_t interrupt_handlers[256];
 void irq_install();
@@ -71,8 +73,9 @@ void isr_install(){
 		set_idt_gate(45,(uint32_t)irq13);
 		set_idt_gate(46,(uint32_t)irq14);
 		set_idt_gate(47,(uint32_t)irq15);
-		set_idt();
+		set_idt_gate(64,(uint32_t)irq64);
 		irq_install();
+		set_idt();
 }
 
 
@@ -137,12 +140,17 @@ void irq_handler(registers_t *r){
 		}
 
 		kprint("received interrupt:");
-//		char s[3];
-//		int_to_ascii(r->int_no,s);
-//		kprint(s);
-//		kprint("\n");
-//		kprint(exception_messages[r->int_no]);
-//		kprint("\n");
+		char s[3];
+		int_to_ascii(r->int_no,s);
+		kprint(s);
+		kprint("\n");
+		kprint(exception_messages[r->int_no]);
+		kprint("\n");
+		kprintf("error code is:%x\n",r->err_code);
+		int result;
+		__asm__ __volatile__ ("movl %%cr2,%0":"=r"(result));
+		kprintf("cr2 addr is:%x\n",result);
+		while(1);
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler){
@@ -151,7 +159,8 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
 
 
 void irq_install(){
-		asm volatile("sti");
+	    cli();
 		init_timer(50);
 		init_keyboard();
+        init_syscall();
 }

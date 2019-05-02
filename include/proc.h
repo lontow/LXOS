@@ -37,4 +37,5 @@ struct proc{
 
 
 void uinit(void);
+struct proc * getcurproc(void);
 #endif

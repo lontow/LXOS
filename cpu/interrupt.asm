@@ -22,19 +22,18 @@
     ; 3. 恢复现场
 ;	call trapret
 	
-irq_common_stub:
+common_stub:
     push ds
     push es
     push fs
     push gs
+    pusha 
     mov ax, 0x10 
     mov ds, ax
     mov es, ax
-    pusha 
     push esp
-    cld
     call trap_handler ; 不同于isr
-    pop ebx
+    add esp,4
     ; 3. 恢复现场
 
 global trapret
@@ -49,19 +48,18 @@ trapret:
     
 
 ; Irq处理总站 ，多了弹出ebx
-common_stub:
-    push ds
-    push es
-    push fs
-    push gs
-    mov ax, 0x10 
-    mov ds, ax
-    mov es, ax
-    pusha 
-    push esp
-    cld
-    call trap_handler ; 不同于isr
-    pop ebx ; 不同于 isr
+irq_common_stub:
+    	push ds
+    	push es
+    	push fs
+    	push gs
+    	pusha 
+    	mov ax, 0x10 
+    	mov ds, ax
+    	mov es, ax
+    	push esp
+    	call trap_handler ; 不同于isr
+    	add esp,4
 	popa
     	pop gs
 	pop fs
@@ -119,6 +117,7 @@ global irq12
 global irq13
 global irq14
 global irq15
+global irq64
 
 ; 0: Divide By Zero Exception
 isr0:
@@ -435,5 +434,10 @@ irq15:
 	push byte 47
 	jmp common_stub
 
+irq64:
+	
+	push byte 64 
+	push byte 64
+	jmp common_stub
 
 

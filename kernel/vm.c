@@ -5,12 +5,14 @@
 #include "../libc/string.h"
 #include "kalloc.h"
 #include "screen.h"
+#include "proc.h"
 
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 extern char data[];  // kernel.ld 中定义
 pde_t *kpgdir;
 struct segdesc gdt[6];
+struct taskstate ts;
 
 //段初始化
 void seginit(void)
@@ -146,4 +148,29 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
   memmove(mem, init, sz);
+}
+
+
+
+void
+switchuvm(struct proc *p)
+{
+  if(p == 0)
+    kprint("switchuvm: no process");
+  if(p->kstack == 0)
+    kprint("switchuvm: no kstack");
+  if(p->pgdir == 0)
+    kprint("switchuvm: no pgdir");
+
+  cli();
+  gdt[SEG_TSS] = SEG16(STS_T32A, &ts,  sizeof(ts)-1, 0);
+  gdt[SEG_TSS].s = 0;
+  ts.ss0 = SEG_KDATA << 3;
+  ts.esp0 = (uint)p->kstack + KSTACKSIZE;
+  // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
+  // forbids I/O instructions (e.g., inb and outb) from user space
+  ts.iomb = (ushort) 0xFFFF;
+  ltr(SEG_TSS << 3);
+  lcr3(V2P(p->pgdir));  // switch to process's address space
+  sti();
 }

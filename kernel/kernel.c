@@ -1,7 +1,6 @@
 #include "screen.h"
 #include "../libc/string.h"
 #include "../libc/mem.h"
-#include "../cpu/isr.h"
 #include "types.h"
 #include "mmu.h"
 #include "kernel.h"
@@ -22,8 +21,6 @@ void kernel_main(){
 		kinit1(end,P2V(4*1024*1024));
 		kvmalloc();
 		seginit();
-		isr_install();
-//		irq_install();	
 		kinit2(P2V(4*1024*1024), P2V(PHYSTOP));
 		uinit();
 		clear_screen();
