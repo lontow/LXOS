@@ -34,18 +34,19 @@ kernel.elf: boot/kernel_entry.o  kernel/swtch.o init ${OBJ}
 boot/loader.elf: boot/loader.o boot/start.o
 	i386-elf-ld  -Ttext 0x7c00  -e bootstart -o $@ $^
 
+QEMUPARAMS = -drive file=os.img,index=0,media=disk,format=raw  -m 512 -drive file=fs.img,index=1,media=disk,format=raw 
 #运行
-run: os.img
-	qemu-system-i386   -drive file=os.img,index=0,media=disk,format=raw  -m 512
+run: os.img fs.img
+	qemu-system-i386  ${QEMUPARAMS} 
 
-run-nox: os.img
-	qemu-system-i386  -nographic -drive file=os.img,index=0,media=disk,format=raw  -m 512
+run-nox: os.img fs.img
+	qemu-system-i386  -nographic ${QEMUPARAMS} 
 
-debug-nox: os.img kernel.elf   boot/loader.elf
-	qemu-system-i386   -nographic  -drive file=os.img,index=0,media=disk,format=raw  -smp 1 -gdb tcp::1245 -S -m 512 -D int,cpu_reset 
+debug-nox: os.img kernel.elf   boot/loader.elf fs.img
+	qemu-system-i386   -${QEMUPARAMS}  nographic  -drive -gdb tcp::1245 -S -D int,cpu_reset 
 	
-debug: os.img kernel.elf   boot/loader.elf
-	qemu-system-i386   -drive file=os.img,index=0,media=disk,format=raw  -smp 1 -gdb tcp::1245 -S -m 512 -D int,cpu_reset 
+debug: os.img kernel.elf   boot/loader.elf fs.img
+	qemu-system-i386   -${QEMUPARAMS}  gdb tcp::1245 -S -D int,cpu_reset 
 
 
 
@@ -83,8 +84,12 @@ os.img: boot/loader.bin kernel.elf
 	dd if=kernel.elf of=$@  seek=1 conv=notrunc
 
 #制作文件系统
+fs.img: mkfs
+	echo "fs test" > fs.txt
+	./mkfs  $@  fs.txt 
+
 mkfs: utils/mkfs.c 
 	gcc -I include -Werror -Wall  -o mkfs $<
 clean:
-	rm -rf *.img *.dis *.o  *.elf init init.out
+	rm -rf *.img *.dis *.o  *.elf init init.out fs.txt
 	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o boot/*.elf  libc/*.o

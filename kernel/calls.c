@@ -2,6 +2,7 @@
 #include "types.h"
 #include "syscall.h"
 #include "screen.h"
+#include "sh.h"
 
 int sys_exec(void)
 {
@@ -27,6 +28,7 @@ int sys_exec(void)
       return -1;
   }
   kprintf("exec:%s,%s\n",path,argv[0]);
+  user_input("test IDE");
   return 0;
 }
 

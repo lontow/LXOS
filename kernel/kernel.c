@@ -8,6 +8,7 @@
 #include  "vm.h"
 #include  "x86.h"
 #include "proc.h"
+#include "ide.h"
 extern char end[];
 __attribute__((__aligned__(PGSIZE)))
  pde_t entrypgdir[NPDENTRIES] ={
@@ -22,6 +23,7 @@ void kernel_main(){
 		kvmalloc();
 		seginit();
 		kinit2(P2V(4*1024*1024), P2V(PHYSTOP));
+		ideinit();
 		uinit();
 		clear_screen();
 		kprint("Welcome to LTxOS!\n"

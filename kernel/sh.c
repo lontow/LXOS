@@ -2,6 +2,8 @@
 #include "../libc/string.h"
 #include "screen.h"
 #include "types.h"
+//test ide driver
+#include "ide.h"
 void user_input(char * input){
 		if(strcmp(input,"CLS")==0){
 		clear_screen();
@@ -21,6 +23,30 @@ void user_input(char * input){
 				kprint(",physical address: ");
 				kprint(phys_str);
 				kprint("\n");
+		}else if(strcmp(input,"TESTIDEW")==0){
+		
+				struct buf buf1;
+				buf1.blockno=1;
+				buf1.flags=B_DIRTY;
+				buf1.data[0]='e';
+				buf1.data[1]='e';
+				buf1.data[2]='e';
+				buf1.data[3]='e';
+				buf1.data[4]='e';
+				buf1.data[5]='e';
+				buf1.dev=1;
+				iderw(&buf1);
+				kprintf("ide write:%s\n","eeeeee");
+
+		}else if(strcmp(input,"TESTIDER")==0){
+
+
+				struct buf buf1;
+				buf1.blockno=1;
+				buf1.flags=B_DIRTY;
+				buf1.dev=1;
+				iderw(&buf1);
+				kprintf("ide read:%c\n",buf1.data[0]);
 		}
 		kprint("You said:");
 		kprint(input);

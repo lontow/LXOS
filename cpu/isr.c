@@ -1,5 +1,6 @@
 #include "isr.h"
 #include "idt.h"
+#include "ide.h"
 #include "x86.h"
 #include "screen.h"
 #include "keyboard.h"
@@ -161,6 +162,8 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
 void irq_install(){
 	    cli();
 		init_timer(50);
+		ide_register();
 		init_keyboard();
         init_syscall();
+
 }
