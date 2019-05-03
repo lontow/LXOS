@@ -18,6 +18,7 @@ typedef unsigned short ushort;
 typedef unsigned char  uchar;
 typedef uint pde_t;
 typedef uint pte_t;
+#define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 #define low_16(address) (uint16_t)((address)& 0xFFFF)
 #define high_16(address) (uint16_t)(((address)>>16)& 0xFFFF)

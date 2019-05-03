@@ -23,7 +23,6 @@ swtch:
   movl %edx, %esp
 
   # Load new callee-saved registers
-  pushl %eax
   popl %edi
   popl %esi
   popl %ebx

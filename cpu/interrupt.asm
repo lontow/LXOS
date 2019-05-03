@@ -39,7 +39,7 @@ common_stub:
 global trapret
 trapret:
 	popa
-    	pop gs
+    pop gs
 	pop fs
 	pop es
 	pop ds
