@@ -140,3 +140,37 @@ void forkret(void){
   }
 		return ;
 }
+
+void exit(void)
+{
+  struct proc *curproc = getcurproc();
+  struct proc *p;
+  int fd;
+
+  if(curproc == initproc)
+    kprint("init exiting\n");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
+      fileclose(curproc->ofile[fd]);
+      curproc->ofile[fd] = 0;
+    }
+  }
+
+  iput(curproc->cwd);
+  curproc->cwd = 0;
+
+
+  //wakeup1(curproc->parent);
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+    //  if(p->state == ZOMBIE)
+   //     wakeup1(initproc);
+    }
+  }
+return;
+}

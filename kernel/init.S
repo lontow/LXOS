@@ -19,7 +19,7 @@ start:
 exit:
   movl $SYS_exit, %eax
   int $T_SYSCALL
-#  jmp exit
+  jmp exit
 
 # char init[] = "/init\0";
 init:

@@ -55,10 +55,10 @@ run-nox: os.img fs.img
 	qemu-system-i386  -nographic ${QEMUPARAMS} 
 
 debug-nox: os.img kernel.elf   boot/loader.elf fs.img
-	qemu-system-i386   -${QEMUPARAMS}  nographic  -drive -gdb tcp::1245 -S -D int,cpu_reset 
+	qemu-system-i386   -${QEMUPARAMS}  -nographic  -drive -gdb tcp::1245 -S -D int,cpu_reset 
 	
 debug: os.img kernel.elf   boot/loader.elf fs.img
-	qemu-system-i386   -${QEMUPARAMS}  gdb tcp::1245 -S -D int,cpu_reset 
+	qemu-system-i386   -${QEMUPARAMS}  -gdb tcp::1245 -S -D int,cpu_reset 
 
 
 
@@ -100,8 +100,8 @@ fs.img: mkfs ${USER_OBJS}
 	echo "fs test" > fs.txt
 	./mkfs  $@  fs.txt ${USER_OBJS}
 
-mkfs: utils/mkfs.c 
-	gcc -I include -Werror -Wall  -o mkfs $<
+mkfs: utils/mkfs.c   
+	gcc  -I include -Werror -Wall  -o mkfs $<
 clean:
-	rm -rf *.img *.dis *.o  *.elf init *.out fs.txt
+	rm -rf *.img *.dis *.o  *.elf init *.out fs.txt _init mkfs
 	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o boot/*.elf  libc/*.o

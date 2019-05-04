@@ -6,9 +6,8 @@
 #include "calls.h"
 #include "fs.h"
 #include "file.h"
-#include "fcntl.h"
+#include "fctl.h"
 #include "proc.h"
-
 
 int sys_exec(void)
 {
@@ -39,7 +38,7 @@ int sys_exec(void)
 
 }
 int sys_exit(void){
-		kprintf("exit\n");
+		exit();
 		return 0;
 }
 
@@ -218,4 +217,14 @@ int sys_read(void)
   if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
     return -1;
   return fileread(f, p, n);
+}
+
+int sys_fstat(void)
+{
+  struct file *f;
+  struct stat *st;
+
+  if(argfd(0, 0, &f) < 0 || argptr(1, (void*)&st, sizeof(*st)) < 0)
+    return -1;
+  return filestat(f, st);
 }

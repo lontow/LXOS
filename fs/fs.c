@@ -295,7 +295,7 @@ ilock(struct inode *ip)
   struct dinode *dip;
 
   if(ip == 0 || ip->ref < 1)
-    kprint("ilock");
+    kprint("ilock\n");
 
  // acquiresleep(&ip->lock);
 
@@ -320,7 +320,7 @@ void
 iunlock(struct inode *ip)
 {
   if(ip == 0 ||  ip->ref < 1)
-    kprint("iunlock");
+    kprint("iunlock\n");
 
  // releasesleep(&ip->lock);
 }

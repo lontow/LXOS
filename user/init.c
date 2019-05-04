@@ -5,13 +5,21 @@
 #include "stat.h"
 #include "screen.h"
 #include "user.h"
-#include "fcntl.h"
+#include "fctl.h"
 
 char *argv[] = { "sh", 0 };
 char buf[8192];
 
-int
-main(void)
+int stat(const char * path,struct stat *st)
+{
+		int fd=open(path,O_RDONLY);
+		  printf(0,"fs.text 's fd is:%d\n",fd);
+		if(fd <=0) return -1;
+		int r=fstat(fd,st);
+		close(fd);
+		return r;
+}
+int main(void)
 {
   //int pid, wpid;
 
@@ -48,15 +56,23 @@ main(void)
   }
   printf(0, "writes ok\n");
   close(fd);
+  struct stat st;
+  st.size=7;
+  if(stat("fs.txt",&st))
+		  printf(0,"fs.text size is:%d\n",st.size);
+  else{
+  		printf(0,"get fs.txt stat,failed!\n");
+//		exit();
+  }
   fd = open("fs.txt", O_RDONLY);
   if(fd >= 0){
-    printf(0, "open small succeeded ok\n");
+    printf(0, "open fs.txt succeeded ok\n");
   } else {
     printf(0, "error: open small failed!\n");
    // exit();
   }
-  i = read(fd, buf, 5);
-  if(i == 5){
+  i = read(fd, buf, sizeof(buf));
+  if(i ){
     printf(0, "read succeeded ok\n");
 
 	printf(0,"content:%s\n",buf);

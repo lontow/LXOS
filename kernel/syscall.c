@@ -10,6 +10,7 @@ extern int sys_close(void);
 extern int sys_mknod(void);
 extern int sys_write(void);
 extern int sys_read(void);
+extern int sys_fstat(void);
 
 static int (*syscalls[])(void)={
 		[SYS_exec]  sys_exec,
@@ -18,7 +19,8 @@ static int (*syscalls[])(void)={
 		[SYS_mknod] sys_mknod,
 		[SYS_write] sys_write,
 		[SYS_close] sys_close,
-		[SYS_read] sys_read,
+		[SYS_read] 	sys_read,
+		[SYS_fstat] sys_fstat,
 };
 void dispatcher(int num,struct proc * proc){
 	if(num >0 && num < (int)NELEM(syscalls) && syscalls[num] )

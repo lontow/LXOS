@@ -16,7 +16,7 @@ struct context{
 };
 
 //进程状态
-enum procstate {UNUSED,EMBYRO,SLEEPING,RUNNABLE,RUNNING,ZOMBIE};
+enum procstate {UNUSED,EMBYRO,SLEEPING,RUNNABLE,RUNNING};
 
 //进程
 struct proc{
@@ -39,4 +39,5 @@ struct proc{
 
 void uinit(void);
 struct proc * getcurproc(void);
+void exit(void);
 #endif

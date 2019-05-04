@@ -5,6 +5,7 @@
 #define SYS_write 5 
 #define SYS_read 6 
 #define SYS_close 7 
+#define SYS_fstat 8 
 #ifndef __ASSEMBLER__
 #include "types.h"
 void init_syscall(void);
