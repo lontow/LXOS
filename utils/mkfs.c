@@ -9,7 +9,6 @@
 #define stat xv6_stat  // avoid clash with host struct stat
 #include "types.h"
 #include "fs.h"
-#include "stat.h"
 
 #ifndef static_assert
 #define static_assert(a, b) do { switch (0) case 0: case (a): ; } while (0)
@@ -38,7 +37,7 @@ void wsect(uint, void*);
 void winode(uint, struct dinode*);
 void rinode(uint inum, struct dinode *ip);
 void rsect(uint sec, void *buf);
-uint ialloc(ushort type);
+uint inoalloc(ushort type);
 void iappend(uint inum, void *p, int n);
 
 // convert to intel byte order
@@ -114,7 +113,7 @@ main(int argc, char *argv[])
   memmove(buf, &sb, sizeof(sb));
   wsect(1, buf);
 
-  rootino = ialloc(T_DIR);
+  rootino = inoalloc(T_DIR);
   assert(rootino == ROOTINO);
 
   bzero(&de, sizeof(de));
@@ -142,7 +141,7 @@ main(int argc, char *argv[])
     if(argv[i][0] == '_')
       ++argv[i];
 
-    inum = ialloc(T_FILE);
+    inum = inoalloc(T_FILE);
 
     bzero(&de, sizeof(de));
     de.inum = xshort(inum);
@@ -221,7 +220,7 @@ rsect(uint sec, void *buf)
 }
 
 uint
-ialloc(ushort type)
+inoalloc(ushort type)
 {
   uint inum = freeinode++;
   struct dinode din;

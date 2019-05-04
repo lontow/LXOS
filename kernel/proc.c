@@ -2,11 +2,12 @@
 #include "proc.h"
 #include "kalloc.h"
 #include "mmu.h"
-#include "../libc/string.h"
+#include "string.h"
 #include "screen.h"
 #include "vm.h"
 #include "../cpu/isr.h"
 #include "x86.h"
+#include "fs.h"
 
 struct {
 	struct proc proc[NPROC];
@@ -111,8 +112,8 @@ void uinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of init.S
 
- // safestrcpy(p->name, "init", sizeof(p->name));
- // p->cwd = namei("/");
+  safestrcpy(p->name, "init", sizeof(p->name));
+  p->cwd = namei("/");
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
@@ -130,5 +131,12 @@ void uinit(void)
 }
 
 void forkret(void){
+
+  static int first = 1;
+
+  if (first) {
+    first = 0;
+    iinit(ROOTDEV);
+  }
 		return ;
 }

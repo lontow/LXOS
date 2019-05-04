@@ -2,6 +2,7 @@
 #define PROC_H
 #include "types.h"
 #include "../cpu/isr.h"
+#include "file.h"
 
 #define NPROC 64  // 最大进程个数
 //上下文环境
@@ -29,8 +30,8 @@ struct proc{
 	struct context *context;
 	void *chan;
 	int killed;
-	//struct file *ofile[NOFILE];
-	//struct inode *cwd;
+	struct file *ofile[NOFILE];
+	struct inode *cwd;
 	char name[16];
 };
 

@@ -5,22 +5,30 @@
 #include "../libc/string.h"
 #include "../libc/function.h"
 #include "sh.h"
-
+//只响应按下IRQ 即只响应mark码
 #define BACKSPACE 0x0E
 #define ENTER 0x1c
+#define CAPSLOCK 0x3a
+static int  capslock=0;
 
 static  char key_buffer[256];
 
-#define SC_MAX 57
+#define SC_MAX 0x3a 
 const char *sc_name[]={"ERROR","Esc","1","2","3","4","5","6",
 "7","8","9","0","-","=","Backspace","Tab","Q","W","E","R","T",
 "Y","U","I","O","P","[","]","Enter","LCtrl","A","S","D","F","G",
 "H","J","K","L",";","'","`","LShift","\\","Z","X","C","V","B",
 "N","M",",",".","/","Rshift","Keypad *","LAlt","SpaceBar"};
-const char sc_ascii[]={'?','?','1','2','3','4','5','6','7','8',
+
+const char sc_ascii_caps[]={'?','?','1','2','3','4','5','6','7','8',
 		'9','0','-','=','?','?','Q','W','E','R','T','Y','U','I',
 'O','P','[',']','?','?','A','S','D','F','G','H','J','K','L',';','\'',
 '`','?','\\','Z','X','C','V','B','N','M',',','.','/','?','?','?',' '};
+
+const char sc_ascii_normal[]={'?','?','1','2','3','4','5','6','7','8',
+		'9','0','-','=','?','?','q','w','e','r','t','y','u','i',
+'o','p','[',']','?','?','a','s','d','f','g','h','j','k','l',';','\'',
+'`','?','\\','z','x','c','v','b','n','m',',','.','/','?','?','?',' '};
 
 /*
 static void keyboard_callback(registers_t regs){
@@ -36,6 +44,7 @@ static void keyboard_callback(registers_t regs){
 */
 
 static void keyboard_callback(registers_t *regs){
+
 		uint8_t scancode = port_byte_in(0x60);
 
 		if(scancode > SC_MAX) return;
@@ -46,8 +55,11 @@ static void keyboard_callback(registers_t *regs){
 				kprint("\n");
 				user_input(key_buffer);
 				key_buffer[0]='\0';
-		}else {
-				char letter=sc_ascii[(int)scancode];
+		}else if(scancode==CAPSLOCK){
+				capslock=capslock?0:1;
+				kprintf("capslock:%d\n",capslock);
+		}else{
+				char letter=capslock?sc_ascii_caps[(int)scancode]:sc_ascii_normal[(int)scancode];
 				char str[2]={letter,'\0'};
 				append(key_buffer,letter);
 				kprint(str);
@@ -55,6 +67,13 @@ static void keyboard_callback(registers_t *regs){
 		UNUSED(regs);
 }
 void init_keyboard(){
+		//关闭大写
+		port_byte_out(0x60,0xED);
+		while(port_byte_in(0x60)!=0xfa);
+		port_byte_out(0x60,0x0);
+		kprintf("kern:capslock:disable!\n");
+		//设置屏幕
+		screeninit();
 		register_interrupt_handler(IRQ1,keyboard_callback);
 }
 

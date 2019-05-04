@@ -128,7 +128,7 @@ void trap_handler(registers_t *r){
 }
 
 void irq_handler(registers_t *r){
-		if(r->int_no==130||r->int_no==140||r->int_no==160) {
+		if(r->int_no==130||r->int_no==14||r->int_no==160) {
 		return;
 		char s[40];
 		int_to_ascii(r->eip,s);

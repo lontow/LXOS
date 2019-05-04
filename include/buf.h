@@ -1,3 +1,5 @@
+#ifndef BUF_H
+#define BUF_H
 #include "types.h"
 struct buf {
   int flags;
@@ -13,3 +15,4 @@ struct buf {
 #define B_VALID 0x2  // buffer has been read from disk
 #define B_DIRTY 0x4  // buffer needs to be written to disk
 
+#endif

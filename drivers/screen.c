@@ -3,6 +3,8 @@
 #include "screen.h"
 #include "../libc/mem.h"
 #include "types.h"
+#include "file.h"
+#include "fs.h"
 
 
 int get_cursor_offset();
@@ -25,7 +27,7 @@ void kprint_at(char * message,int col, int row){
 
 		int i=0;
 		while(message[i]!=0){
-				offset=print_char(message[i++],col,row,WHITE_ON_BLACK);
+				offset=print_char(message[i++],col,row,RED_ON_BLACK);
 				row = get_offset_row(offset);
 				col = get_offset_col(offset);
 		}
@@ -74,6 +76,7 @@ kprintint(int xx, int base, int sign)
 }
 
 void kprintf(const char* fmt,...){
+	kprint("kern:");
 	if(fmt==0){
 		kprint("error for kprintf");
 	}
@@ -147,7 +150,7 @@ int print_char(char c,int col,int row,char attr){
 		}
 		if(col>= MAX_COLS||row>=MAX_ROWS){
 				vidmem[2*MAX_ROWS*MAX_COLS-2]='E';
-				vidmem[2*MAX_ROWS*MAX_COLS-1]=RED_ON_WHITE;
+				vidmem[2*MAX_ROWS*MAX_COLS-1]=RED_ON_BLACK;
 				return get_offset(col,row);
 		}
 		set_cursor_offset(offset);
@@ -190,3 +193,24 @@ int get_offset(int col, int row){return 2*(row*MAX_COLS+col);}
 int get_offset_row(int offset){return offset/(2*MAX_COLS);}
 int get_offset_col(int offset){return (offset-(get_offset_row(offset)*2*MAX_COLS))/2;}
 
+
+//将屏幕虚拟成设备文件
+//
+
+
+int screenewrite(struct inode *ip, char *buf, int n)
+{
+  int i;
+
+  iunlock(ip);
+  for(i = 0; i < n; i++)
+    kputchar(buf[i] & 0xff);
+  ilock(ip);
+
+  return n;
+}
+
+void  screeninit(void){
+		devsw[CONSOLE].write=screenewrite;
+		devsw[CONSOLE].read=NULL;
+}

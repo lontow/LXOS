@@ -5,10 +5,20 @@
 
 extern int sys_exit(void);
 extern int sys_exec(void);
+extern int sys_open(void);
+extern int sys_close(void);
+extern int sys_mknod(void);
+extern int sys_write(void);
+extern int sys_read(void);
 
 static int (*syscalls[])(void)={
 		[SYS_exec]  sys_exec,
 		[SYS_exit]  sys_exit,
+		[SYS_open]  sys_open,
+		[SYS_mknod] sys_mknod,
+		[SYS_write] sys_write,
+		[SYS_close] sys_close,
+		[SYS_read] sys_read,
 };
 void dispatcher(int num,struct proc * proc){
 	if(num >0 && num < (int)NELEM(syscalls) && syscalls[num] )
@@ -23,7 +33,7 @@ void dispatcher(int num,struct proc * proc){
 	struct proc* curproc=getcurproc();
 	curproc->tf=r;
     int num =curproc->tf->eax;
-	kprintf("recv syscall: %d,%d\n",num,r->int_no);
+//	kprintf("recv syscall: %d,%d\n",num,r->int_no);
 	dispatcher(num,curproc);
 	return ;
 }

@@ -9,6 +9,9 @@
 #include  "x86.h"
 #include "proc.h"
 #include "ide.h"
+#include "fs.h"
+#include "file.h"
+#include "bio.h"
 extern char end[];
 __attribute__((__aligned__(PGSIZE)))
  pde_t entrypgdir[NPDENTRIES] ={
@@ -23,9 +26,11 @@ void kernel_main(){
 		kvmalloc();
 		seginit();
 		kinit2(P2V(4*1024*1024), P2V(PHYSTOP));
+		binit();
+		fileinit();
 		ideinit();
-		uinit();
 		clear_screen();
+		uinit();
 		kprint("Welcome to LTxOS!\n"
 				"********************************************************\n");
 	kprint("Type something ,it will go through the kernel\nEND to halt or PAGE to request a kmalloc()\n>");

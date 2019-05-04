@@ -87,7 +87,6 @@ idestart(struct buf *b)
 
   idewait(0);
   outb(0x3f6, 0);  // generate interrupt
-  kprint("gen ide int\n");
   outb(0x1f2, sector_per_block);  // number of sectors
   outb(0x1f3, sector & 0xff);
   outb(0x1f4, (sector >> 8) & 0xff);

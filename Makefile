@@ -1,8 +1,10 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c boot/*.c )
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c boot/*.c fs/*.c)
 HEADERS = $(wildcard include/*.h cpu/*.h libc/*.h )
 # 文件扩展替换
 OBJ = ${C_SOURCES:.c=.o} 
 OBJ += cpu/interrupt.o 
+
+USER_OBJS = _init 
 
 
 # 交叉编译环境
@@ -10,11 +12,21 @@ CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 AS = /usr/local/i385elfgcc/bin/i386-elf-as
 GDB = gdb
 # -g: 调试  -std=gnu99使用gnu99 扩展
-CFLAGS =  -I ./include -fno-pic -g -m32 -ffreestanding -Wall -Wextra -Werror -fno-exceptions -std=gnu99  
+CFLAGS =  -I ./include -I ./libc -fno-pic -g -m32 -ffreestanding -Wall -Wextra -Werror -fno-exceptions -std=gnu99  
 
 
 %.o: %.c ${HEADERS}
 	${CC} ${CFLAGS}  -c $< -o $@
+
+printf.o: user/printf.c ${HEADERS}
+	${CC} ${CFLAGS}  -c $< -o $@
+
+usys.o: user/usys.S
+	${CC} ${CFLAGS}  -c $< -o $@
+
+_init: user/init.c ${HEADERS} usys.o printf.o
+	${CC} ${CFLAGS}  -c $< -o $@.out
+	i386-elf-ld  -N -e main -Ttext 0 -o $@ $@.out usys.o printf.o
 
 init: kernel/init.S
 	$(CC) $(CFLAGS) -nostdinc  -c $^ -o init.o
@@ -84,12 +96,12 @@ os.img: boot/loader.bin kernel.elf
 	dd if=kernel.elf of=$@  seek=1 conv=notrunc
 
 #制作文件系统
-fs.img: mkfs
+fs.img: mkfs ${USER_OBJS}
 	echo "fs test" > fs.txt
-	./mkfs  $@  fs.txt 
+	./mkfs  $@  fs.txt ${USER_OBJS}
 
 mkfs: utils/mkfs.c 
 	gcc -I include -Werror -Wall  -o mkfs $<
 clean:
-	rm -rf *.img *.dis *.o  *.elf init init.out fs.txt
+	rm -rf *.img *.dis *.o  *.elf init *.out fs.txt
 	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o boot/*.elf  libc/*.o

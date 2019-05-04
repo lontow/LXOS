@@ -5,7 +5,6 @@
 #include "../libc/string.h"
 #include "kalloc.h"
 #include "screen.h"
-#include "proc.h"
 
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -38,11 +37,11 @@ static struct kmap {
  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, // 更多设备
 };
 
-void
-freevm(pde_t *pgdir)
+void freevm(pde_t *pgdir)
 {
   uint i;
 
+  deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
       char * v = P2V(PTE_ADDR(pgdir[i]));
@@ -174,3 +173,128 @@ switchuvm(struct proc *p)
   lcr3(V2P(p->pgdir));  // switch to process's address space
   sti();
 }
+
+
+int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+{
+  pte_t *pte;
+  uint a, pa;
+
+  if(newsz >= oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(newsz);
+  for(; a  < oldsz; a += PGSIZE){
+    pte = walkpgdir(pgdir, (char*)a, 0);
+    if(!pte)
+      a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
+    else if((*pte & PTE_P) != 0){
+      pa = PTE_ADDR(*pte);
+      if(pa == 0)
+        kprint("kfree faild");
+      char *v = P2V(pa);
+      kfree(v);
+      *pte = 0;
+    }
+  }
+  return newsz;
+}
+
+
+int loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
+{
+  uint i, pa, n;
+  pte_t *pte;
+
+  if((uint) addr % PGSIZE != 0)
+    kprint("loaduvm: addr must be page aligned");
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
+      kprint("loaduvm: address should exist");
+    pa = PTE_ADDR(*pte);
+    if(sz - i < PGSIZE)
+      n = sz - i;
+    else
+      n = PGSIZE;
+    if(readi(ip, P2V(pa), offset+i, n) != (int)n)
+      return -1;
+  }
+  return 0;
+}
+
+
+
+void clearpteu(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if(pte == 0)
+    kprint("clearpteu failed");
+  *pte &= ~PTE_U;
+}
+
+
+int allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+{
+  char *mem;
+  uint a;
+
+  if(newsz >= KERNBASE)
+    return 0;
+  if(newsz < oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(oldsz);
+  for(; a < newsz; a += PGSIZE){
+    mem = kalloc();
+    if(mem == 0){
+      kprintf("allocuvm out of memory\n");
+      deallocuvm(pgdir, newsz, oldsz);
+      return 0;
+    }
+    memset(mem, 0, PGSIZE);
+    if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
+      kprintf("allocuvm out of memory (2)\n");
+      deallocuvm(pgdir, newsz, oldsz);
+      kfree(mem);
+      return 0;
+    }
+  }
+  return newsz;
+}
+char*
+uva2ka(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if((*pte & PTE_P) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+  return (char*)P2V(PTE_ADDR(*pte));
+}
+
+int copyout(pde_t *pgdir, uint va, void *p, uint len)
+{
+  char *buf, *pa0;
+  uint n, va0;
+
+  buf = (char*)p;
+  while(len > 0){
+    va0 = (uint)PGROUNDDOWN(va);
+    pa0 = uva2ka(pgdir, (char*)va0);
+    if(pa0 == 0)
+      return -1;
+    n = PGSIZE - (va - va0);
+    if(n > len)
+      n = len;
+    memmove(pa0 + (va - va0), buf, n);
+    len -= n;
+    buf += n;
+    va = va0 + PGSIZE;
+  }
+  return 0;
+}
+

@@ -3,5 +3,7 @@
 *.elf
 *.out
 init
+_init
 mkfs
 *.img
+TAGS
