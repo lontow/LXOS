@@ -6,7 +6,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define stat  xv6_stat  // avoid clash with host struct stat
+#define stat  xv6_stat  // 避免和本机结构体冲突
 
 #include "types.h"
 #include "fs.h"
@@ -16,14 +16,16 @@
 
 #define NINODES 200
 
-// Disk layout:
-// [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
+// 硬盘布局:
+// [ 引导 | 超级块 |  inode 块 |
+//                                          空闲块bitmap映射 | 数据块]
+//
 
 int nbitmap = FSSIZE/(BSIZE*8) + 1;
 int ninodeblocks = NINODES / IPB + 1;
 int nlog = LOGSIZE;
-int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
-int nblocks;  // Number of data blocks
+int nmeta;    // 除数据块数
+int nblocks;  // 数据块数
 
 int fsfd;
 struct superblock sb;
@@ -40,7 +42,7 @@ void rsect(uint sec, void *buf);
 uint inoalloc(ushort type);
 void iappend(uint inum, void *p, int n);
 
-// convert to intel byte order
+// 小端模式
 ushort
 xshort(ushort x)
 {
@@ -104,7 +106,7 @@ main(int argc, char *argv[])
   printf("nmeta %d (boot, super, log blocks %u inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
          nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
 
-  freeblock = nmeta;     // the first free block that we can allocate
+  freeblock = nmeta;     
 
   for(i = 0; i < FSSIZE; i++)
     wsect(i, zeroes);
@@ -134,10 +136,7 @@ main(int argc, char *argv[])
       exit(1);
     }
 
-    // Skip leading _ in name when writing to file system.
-    // The binaries are named _rm, _cat, etc. to keep the
-    // build operating system from trying to execute them
-    // in place of system binaries like rm and cat.
+    // 加载　_init
     if(argv[i][0] == '_')
       ++argv[i];
 
@@ -154,7 +153,7 @@ main(int argc, char *argv[])
     close(fd);
   }
 
-  // fix size of root inode dir
+  // 根目录
   rinode(rootino, &din);
   off = xint(din.size);
   off = ((off/BSIZE) + 1) * BSIZE;

@@ -2,8 +2,8 @@
 #include "../cpu/isr.h"
 #include "screen.h"
 #include "../cpu/ports.h"
-#include "../libc/string.h"
-#include "../libc/function.h"
+#include "string.h"
+#include "function.h"
 #include "sh.h"
 //只响应按下IRQ 即只响应mark码
 #define BACKSPACE 0x0E

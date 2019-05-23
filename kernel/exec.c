@@ -21,10 +21,10 @@ exec(char *path, char **argv)
   struct proc *curproc = getcurproc();
 
     kprintf("real exec: \n");
-//  begin_op();
+
 
   if((ip = namei(path)) == 0){
-  //  end_op();
+  
     kprintf("exec: fail\n");
     return -1;
   }
@@ -32,7 +32,7 @@ exec(char *path, char **argv)
   pgdir = 0;
   kprintf("ready check elf header\n");
 
-  // Check ELF header
+  // 检查ELF 头
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
     goto bad;
   if(elf.magic != ELF_MAGIC)
@@ -42,7 +42,7 @@ exec(char *path, char **argv)
     goto bad;
 
   kprintf("check elf header:OK\n");
-  // Load program into memory.
+  // 加载程序到内存
   sz = 0;
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
@@ -61,18 +61,18 @@ exec(char *path, char **argv)
       goto bad;
   }
   iunlockput(ip);
- // end_op();
+ 
   ip = 0;
 
-  // Allocate two pages at the next page boundary.
-  // Make the first inaccessible.  Use the second as the user stack.
+  // 设置一页(不可访问)作为分界
+  // 设置一页的用户栈
   sz = PGROUNDUP(sz);
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
-  // Push argument strings, prepare rest of stack in ustack.
+  // 将参数入栈
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
@@ -83,25 +83,25 @@ exec(char *path, char **argv)
   }
   ustack[3+argc] = 0;
 
-  ustack[0] = 0xffffffff;  // fake return PC
+  ustack[0] = 0xffffffff;  
   ustack[1] = argc;
-  ustack[2] = sp - (argc+1)*4;  // argv pointer
+  ustack[2] = sp - (argc+1)*4;  
 
   sp -= (3+argc+1) * 4;
   if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
     goto bad;
 
-  // Save program name for debugging.
+ 
   for(last=s=path; *s; s++)
     if(*s == '/')
       last = s+1;
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
-  // Commit to the user image.
+  
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
-  curproc->tf->eip = elf.entry;  // main
+  curproc->tf->eip = elf.entry;  // 程序入口
   curproc->tf->esp = sp;
   kprintf("load elf proc:%s\n",curproc->name);
   switchuvm(curproc);
@@ -113,7 +113,7 @@ exec(char *path, char **argv)
     freevm(pgdir);
   if(ip){
     iunlockput(ip);
-   // end_op();
+   
   }
   return -1;
 }

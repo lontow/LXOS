@@ -1,16 +1,15 @@
 
-// Simple PIO-based (non-DMA) IDE driver code.
+// 简单的IDE 驱动
 
 #include "types.h"
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
 #include "traps.h"
-//#include "spinlock.h"
-//#include "sleeplock.h"
 #include "fs.h"
 #include "buf.h"
 #include "screen.h"
+#include "function.h"
 #include "../cpu/isr.h"
 
 #define SECTOR_SIZE   512
@@ -24,17 +23,16 @@
 #define IDE_CMD_RDMUL 0xc4
 #define IDE_CMD_WRMUL 0xc5
 
-// idequeue points to the buf now being read/written to the disk.
-// idequeue->qnext points to the next buf to be processed.
-// You must hold idelock while manipulating queue.
 
-//static struct spinlock idelock;
+
+
+
 static struct buf *idequeue;
 
 static int havedisk1;
 static void idestart(struct buf*);
 
-// Wait for IDE disk to become ready.
+// 等待ＩＤＥ　硬盘就绪
 static int
 idewait(int checkerr)
 {
@@ -52,11 +50,10 @@ ideinit(void)
 {
   int i;
 
-  //initlock(&idelock, "ide");
- // ioapicenable(IRQ_IDE, ncpu - 1);
+
   idewait(0);
 
-  // Check if disk 1 is present
+  // 检查disk 1
   outb(0x1f6, 0xe0 | (1<<4));
   for(i=0; i<1000; i++){
     if(inb(0x1f7) != 0){
@@ -66,11 +63,11 @@ ideinit(void)
     }
   }
 
-  // Switch back to disk 0.
+  // 切换回disk 0.
   outb(0x1f6, 0xe0 | (0<<4));
 }
 
-// Start the request for b.  Caller must hold idelock.
+// 实际读写函数
 static void
 idestart(struct buf *b)
 {
@@ -86,8 +83,8 @@ idestart(struct buf *b)
   if (sector_per_block > 7) kprint("idestart");
 
   idewait(0);
-  outb(0x3f6, 0);  // generate interrupt
-  outb(0x1f2, sector_per_block);  // number of sectors
+  outb(0x3f6, 0);  // 产生中断
+  outb(0x1f2, sector_per_block);  // 读取的页面数
   outb(0x1f3, sector & 0xff);
   outb(0x1f4, (sector >> 8) & 0xff);
   outb(0x1f5, (sector >> 16) & 0xff);
@@ -100,74 +97,72 @@ idestart(struct buf *b)
   }
 }
 
-// Interrupt handler.
+//中断处理函数
 static void ideint_callback(registers_t *r)
 {
- kprintf("ide int:%d\n",r->int_no);
+
+ UNUSED(r);
   struct buf *b;
 
-  // First queued buffer is the active request.
-  //acquire(&idelock);
+
 
   if((b = idequeue) == 0){
-    //release(&idelock);
+
     return;
   }
   idequeue = b->qnext;
 
-  // Read data if needed.
+
   if(!(b->flags & B_DIRTY) && idewait(1) >= 0)
     insl(0x1f0, b->data, BSIZE/4);
 
-  // Wake process waiting for this buf.
+
   b->flags |= B_VALID;
   b->flags &= ~B_DIRTY;
-  //wakeup(b);
 
-  // Start disk on next buf in queue.
+
+  
   if(idequeue != 0)
     idestart(idequeue);
 
-  //release(&idelock);
+ 
 }
 
+//注册中断函数
 void ide_register(void){
 		register_interrupt_handler(IRQ14,ideint_callback);
 }
 
-//PAGEBREAK!
-// Sync buf with disk.
-// If B_DIRTY is set, write buf to disk, clear B_DIRTY, set B_VALID.
-// Else if B_VALID is not set, read buf from disk, set B_VALID.
+
+// 同步磁盘和　buf
+
 void
 iderw(struct buf *b)
 {
   struct buf **pp;
 
- // if(!holdingsleep(&b->lock))
-  //  panic("iderw: buf not locked");
+ 
   if((b->flags & (B_VALID|B_DIRTY)) == B_VALID)
     kprint("iderw: nothing to do");
   if(b->dev != 0 && !havedisk1)
     kprint("iderw: ide disk 1 not present");
 
- // acquire(&idelock);  //DOC:acquire-lock
-
-  // Append b to idequeue.
+ 
+  // 队列添加
   b->qnext = 0;
-  for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  //DOC:insert-queue
+  for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  
     ;
   *pp = b;
 
-  // Start disk if necessary.
+  // 必要时启动读写
   if(idequeue == b)
     idestart(b);
 
-  // Wait for request to finish.
+  // 等待操作完成
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
-  //  sleep(b, &idelock);
+
   }
 
 
-//  release(&idelock);
+
 }

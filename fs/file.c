@@ -1,87 +1,79 @@
 
 //
-// File descriptors
+// 文件描述符
 //
 
 #include "types.h"
-//#include "defs.h"
-//#include "param.h"
 #include "fs.h"
-//#include "spinlock.h"
-//#include "sleeplock.h"
+
 #include "file.h"
 #include "screen.h"
 
 struct devsw devsw[NDEV];
 struct {
-  //struct spinlock lock;
   struct file file[NFILE];
 } ftable;
 
 void
 fileinit(void)
 {
-  //initlock(&ftable.lock, "ftable");
 }
 
-// Allocate a file structure.
+// 分配 file 文件结构
 struct file*
 filealloc(void)
 {
   struct file *f;
 
-  //acquire(&ftable.lock);
+  
   for(f = ftable.file; f < ftable.file + NFILE; f++){
     if(f->ref == 0){
       f->ref = 1;
-    //  release(&ftable.lock);
+    
       return f;
     }
   }
-  //release(&ftable.lock);
+  
   return 0;
 }
 
-// Increment ref count for file f.
+// 增加文件引用.
 struct file*
 filedup(struct file *f)
 {
-  //acquire(&ftable.lock);
-  //if(f->ref < 1)
-    //kprint("filedup");
+  //
+    //
   f->ref++;
-  //release(&ftable.lock);
+  //
   return f;
 }
 
-// Close file f.  (Decrement ref count, close when reaches 0.)
+// 关闭文件
 void
 fileclose(struct file *f)
 {
   struct file ff;
 
-//  acquire(&ftable.lock);
-  //if(f->ref < 1)
-    //kprint("fileclose");
+//  
+  //i
   if(--f->ref > 0){
-   // release(&ftable.lock);
+   // 
     return;
   }
   ff = *f;
   f->ref = 0;
   f->type = FD_NONE;
-  //release(&ftable.lock);
+  //
 
- // if(ff.type == FD_PIPE)
-    //pipeclose(ff.pipe, ff.writable);
+ // 
    if(ff.type == FD_INODE){
-    //begin_op();
+    //
     iput(ff.ip);
-    //end_op();
+    //
   }
 }
 
-// Get metadata about file f.
+// 获取文件状态
 int
 filestat(struct file *f, struct stat *st)
 {
@@ -94,7 +86,7 @@ filestat(struct file *f, struct stat *st)
   return -1;
 }
 
-// Read from file f.
+// 读文件
 int
 fileread(struct file *f, char *addr, int n)
 {
@@ -102,8 +94,7 @@ fileread(struct file *f, char *addr, int n)
 
   if(f->readable == 0)
     return -1;
-  //if(f->type == FD_PIPE)
-    //return piperead(f->pipe, addr, n);
+  //
   if(f->type == FD_INODE){
     ilock(f->ip);
     if((r = readi(f->ip, addr, f->off, n)) > 0)
@@ -115,8 +106,8 @@ fileread(struct file *f, char *addr, int n)
   return -1;
 }
 
-//PAGEBREAK!
-// Write to file f.
+//
+// 写文件
 int
 filewrite(struct file *f, char *addr, int n)
 {
@@ -124,15 +115,9 @@ filewrite(struct file *f, char *addr, int n)
 
   if(f->writable == 0)
     return -1;
- // if(f->type == FD_PIPE)
-  //  return pipewrite(f->pipe, addr, n);
+ // 
   if(f->type == FD_INODE){
-    // write a few blocks at a time to avoid exceeding
-    // the maximum log transaction size, including
-    // i-node, indirect block, allocation blocks,
-    // and 2 blocks of slop for non-aligned writes.
-    // this really belongs lower down, since writei()
-    // might be writing a device like the console.
+    // 控制写入数量
     int max = ((MAXOPBLOCKS-1-1-2) / 2) * 512;
     int i = 0;
     while(i < n){
@@ -140,12 +125,12 @@ filewrite(struct file *f, char *addr, int n)
       if(n1 > max)
         n1 = max;
 
-     // begin_op();
+     // 
       ilock(f->ip);
       if ((r = writei(f->ip, addr + i, f->off, n1)) > 0)
         f->off += r;
       iunlock(f->ip);
-      //end_op();
+      //
 
       if(r < 0)
         break;

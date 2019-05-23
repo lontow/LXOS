@@ -22,7 +22,6 @@ int stat(const char * path,struct stat *st)
 int main(void)
 {
   //int pid, wpid;
-
   if(open("console", O_RDWR) < 0){
     mknod("console", 1, 1);
     open("console", O_RDWR);
@@ -61,7 +60,7 @@ int main(void)
   if(stat("fs.txt",&st))
 		  printf(0,"fs.text size is:%d\n",st.size);
   else{
-  		printf(0,"get fs.txt stat,failed!\n");
+  //		printf(0,"get fs.txt stat,failed!\n");
 //		exit();
   }
   fd = open("fs.txt", O_RDONLY);

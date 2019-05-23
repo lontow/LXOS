@@ -3,12 +3,12 @@
 
 #include "stat.h"
 #define NDIRECT 12
-#define NDEV         10  // maximum major device number
-#define NFILE       100  // open files per system
-#define NOFILE       16  // open files per process
+#define NDEV         10  // 最大的设备数
+#define NFILE       100  // 最大同时打开的文件数
+#define NOFILE       16  // 每个文件能打开的最大文件数
 struct file {
   enum { FD_NONE, FD_PIPE, FD_INODE } type;
-  int ref; // reference count
+  int ref; // 引用计数
   char readable;
   char writable;
   struct pipe *pipe;
@@ -17,15 +17,15 @@ struct file {
 };
 
 
-// in-memory copy of an inode
+//内存inode
 struct inode {
-  uint dev;           // Device number
-  uint inum;          // Inode number
-  int ref;            // Reference count
-//  struct sleeplock lock; // protects everything below here
-  int valid;          // inode has been read from disk?
+  uint dev;           // 设备号
+  uint inum;          // Inode 号
+  int ref;            // 引用计数
 
-  short type;         // copy of disk inode
+  int valid;          // 是否有效
+
+  short type;         // 硬盘inode 复制 
   short major;
   short minor;
   short nlink;
@@ -33,8 +33,7 @@ struct inode {
   uint addrs[NDIRECT+1];
 };
 
-// table mapping major device number to
-// device functions
+// 设备数组
 struct devsw {
   int (*read)(struct inode*, char*, int);
   int (*write)(struct inode*, char*, int);

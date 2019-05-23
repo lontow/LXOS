@@ -8,7 +8,7 @@
 #include "file.h"
 #include "fctl.h"
 #include "proc.h"
-
+//系统调用　exec()
 int sys_exec(void)
 {
 
@@ -37,12 +37,13 @@ int sys_exec(void)
   return exec(path,argv);
 
 }
+//系统调用　exit()
 int sys_exit(void){
 		exit();
 		return 0;
 }
 
-
+//分配文件描述符
 static int
 fdalloc(struct file *f)
 {
@@ -58,6 +59,7 @@ fdalloc(struct file *f)
   return -1;
 }
 
+//创建inode
 static struct inode*
 create(char *path, short type, short major, short minor)
 {
@@ -87,10 +89,10 @@ create(char *path, short type, short major, short minor)
   ip->nlink = 1;
   iupdate(ip);
 
-  if(type == T_DIR){  // Create . and .. entries.
-    dp->nlink++;  // for ".."
+  if(type == T_DIR){  
+    dp->nlink++;  
     iupdate(dp);
-    // No ip->nlink++ for ".": avoid cyclic ref count.
+ 
     if(dirlink(ip, ".", ip->inum) < 0 || dirlink(ip, "..", dp->inum) < 0)
       kprint("create dots");
   }
@@ -102,6 +104,8 @@ create(char *path, short type, short major, short minor)
 
   return ip;
 }
+
+//系统调用 open()
 int sys_open(void)
 {
   char *path;
@@ -146,6 +150,7 @@ int sys_open(void)
   return fd;
 }
 
+//系统调用 mknod()
 int
 sys_mknod(void)
 {
@@ -163,7 +168,7 @@ sys_mknod(void)
   return 0;
 }
 
-
+//获取参数　fd
 static int
 argfd(int n, int *pfd, struct file **pf)
 {
@@ -181,6 +186,7 @@ argfd(int n, int *pfd, struct file **pf)
   return 0;
 }
 
+//系统调用 write()
 int
 sys_write(void)
 {
@@ -195,7 +201,7 @@ sys_write(void)
 
 
 
-
+//系统调用 close()
 int sys_close(void)
 {
   int fd;
@@ -207,7 +213,7 @@ int sys_close(void)
   fileclose(f);
   return 0;
 }
-
+//系统调用 read()
 int sys_read(void)
 {
   struct file *f;
@@ -218,7 +224,7 @@ int sys_read(void)
     return -1;
   return fileread(f, p, n);
 }
-
+//系统调用 fstat()
 int sys_fstat(void)
 {
   struct file *f;

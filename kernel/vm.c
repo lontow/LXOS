@@ -50,9 +50,7 @@ void freevm(pde_t *pgdir)
   }
   kfree((char*)pgdir);
 }
-// Return the address of the PTE in page table pgdir
-// that corresponds to virtual address va.  If alloc!=0,
-// create any required page table pages.
+// 返回　va 在pgdir 中的pte
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
@@ -65,11 +63,9 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   } else {
     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
       return 0;
-    // Make sure all those PTE_P bits are zero.
+    // 
     memset(pgtab, 0, PGSIZE);
-    // The permissions here are overly generous, but they can
-    // be further restricted by the permissions in the page table
-    // entries, if necessary.
+    // 
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
   }
   return &pgtab[PTX(va)];
@@ -97,7 +93,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 }
 
 
-// Set up kernel part of a page table.
+// 设置页面的内核部分
 pde_t*
 setupkvm(void)
 {
@@ -116,18 +112,16 @@ setupkvm(void)
   return pgdir;
 }
 
-// Switch h/w page table register to the kernel-only page table,
-// for when no process is running.
+// 切换到全是　kernel 内存的映射
 void
 switchkvm(void)
 {
-  lcr3(V2P(kpgdir));   // switch to the kernel page table
+  lcr3(V2P(kpgdir));   // 
 }
 
 
 
-// Allocate one page table for the machine for the kernel address
-// space for scheduler processes.
+// 
 void
 kvmalloc(void)
 {
@@ -166,15 +160,14 @@ switchuvm(struct proc *p)
   gdt[SEG_TSS].s = 0;
   ts.ss0 = SEG_KDATA << 3;
   ts.esp0 = (uint)p->kstack + KSTACKSIZE;
-  // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
-  // forbids I/O instructions (e.g., inb and outb) from user space
+  // 
   ts.iomb = (ushort) 0xFFFF;
   ltr(SEG_TSS << 3);
-  lcr3(V2P(p->pgdir));  // switch to process's address space
+  lcr3(V2P(p->pgdir));  //加载新的页目录
   sti();
 }
 
-
+//重新分配内存大小
 int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   pte_t *pte;
@@ -200,7 +193,7 @@ int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-
+//
 int loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 {
   uint i, pa, n;

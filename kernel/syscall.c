@@ -35,7 +35,7 @@ void dispatcher(int num,struct proc * proc){
 	struct proc* curproc=getcurproc();
 	curproc->tf=r;
     int num =curproc->tf->eax;
-//	kprintf("recv syscall: %d,%d\n",num,r->int_no);
+	kprintf("recv syscall: %d,%d\n",num,r->int_no);
 	dispatcher(num,curproc);
 	return ;
 }
@@ -56,9 +56,7 @@ int getint(uint addr, int *ip)
   return 0;
 }
 
-// Fetch the nul-terminated string at addr from the current process.
-// Doesn't actually copy the string - just sets *pp to point at it.
-// Returns length of string, not including nul.
+
 int getstr(uint addr, char **pp)
 {
   char *s, *ep;
@@ -75,16 +73,14 @@ int getstr(uint addr, char **pp)
   return -1;
 }
 
-// Fetch the nth 32-bit system call argument.
+
 int
 argint(int n, int *ip)
 {
   return getint((getcurproc()->tf->esp) + 4 + 4*n, ip);
 }
 
-// Fetch the nth word-sized system call argument as a pointer
-// to a block of memory of size bytes.  Check that the pointer
-// lies within the process address space.
+
 int
 argptr(int n, char **pp, int size)
 {
@@ -99,10 +95,7 @@ argptr(int n, char **pp, int size)
   return 0;
 }
 
-// Fetch the nth word-sized system call argument as a string pointer.
-// Check that the pointer is valid and the string is nul-terminated.
-// (There is no shared writable memory, so the string can't change
-// between this check and being used by the kernel.)
+
 int
 argstr(int n, char **pp)
 {

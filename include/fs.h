@@ -2,57 +2,56 @@
 #define FS_H
 #include "file.h"
 #include "stat.h"
-// rmat.
-// Both the kernel and user programs use this header file.
-
-
-#define ROOTINO 1  // root i-number
-#define BSIZE 512  // block size
-#define ROOTDEV       1  // device number of file system root disk
-
-#define NINODE       50  // maximum number of active i-nodes
-// Disk layout:
-// [ boot block | super block | log | inode blocks |
-//                                          free bit map | data blocks]
 //
-// mkfs computes the super block and builds an initial file system. The
-// super block describes the disk layout:
+//文件系统头文件
+
+
+#define ROOTINO 1  // 根
+#define BSIZE 512  // 块大小
+#define ROOTDEV       1  // 根设备号
+
+#define NINODE       50  // 最大活动　inode 数
+// 硬盘布局:
+// [ 引导 | 超级块 |  inode 块 |
+//                                          空闲块bitmap映射 | 数据块]
+//
+// mkfs 计算sb 
 struct superblock {
-  uint size;         // Size of file system image (blocks)
-  uint nblocks;      // Number of data blocks
-  uint ninodes;      // Number of inodes.
-  uint nlog;         // Number of log blocks
-  uint logstart;     // Block number of first log block
-  uint inodestart;   // Block number of first inode block
-  uint bmapstart;    // Block number of first free map block
+  uint size;         // 文件系统的总块数
+  uint nblocks;      // 数据块数
+  uint ninodes;      // inode 数
+  uint nlog;         // log 层（未用到）
+  uint logstart;     // 
+  uint inodestart;   // 第一个inode 所属块
+  uint bmapstart;    // 第一个空闲映射块号
 };
 
 #define NINDIRECT (BSIZE / sizeof(uint))
 #define MAXFILE (NDIRECT + NINDIRECT)
 
-// On-disk inode structure
+// 硬盘　inode 结构
 struct dinode {
-  short type;           // File type
-  short major;          // Major device number (T_DEV only)
-  short minor;          // Minor device number (T_DEV only)
-  short nlink;          // Number of links to inode in file system
-  uint size;            // Size of file (bytes)
-  uint addrs[NDIRECT+1];   // Data block addresses
+  short type;           // 文件类型
+  short major;          // 主设备号
+  short minor;          // 次设备号
+  short nlink;          // 链接数
+  uint size;            // 文件大小
+  uint addrs[NDIRECT+1];   // 数据块地址表
 };
 
-// Inodes per block.
+// 每块的　inode 数
 #define IPB           (BSIZE / sizeof(struct dinode))
 
-// Block containing inode i
+// 包含　inode i 的块
 #define IBLOCK(i, sb)     ((i) / IPB + sb.inodestart)
 
-// Bitmap bits per block
+// 每块的bitmap 位数
 #define BPB           (BSIZE*8)
 
-// Block of free map containing bit for block b
+// 
 #define BBLOCK(b, sb) (b/BPB + sb.bmapstart)
 
-// Directory is a file containing a sequence of dirent structures.
+// 
 #define DIRSIZ 14
 
 struct dirent {

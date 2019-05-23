@@ -29,11 +29,10 @@ void kernel_main(){
 		binit();
 		fileinit();
 		ideinit();
-		clear_screen();
+		//clear_screen();
 		uinit();
-		kprint("Welcome to LTxOS!\n"
+		kprint("Welcome to LXOS!\n"
 				"********************************************************\n");
-	kprint("Type something ,it will go through the kernel\nEND to halt or PAGE to request a kmalloc()\n>");
 		kprintf("Welcome %d,%c,%s,\n"
 				"********************************************************\n",120,'x',"Lontow");
 		/*

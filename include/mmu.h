@@ -136,19 +136,19 @@ struct taskstate {
 
 #endif
 
-#define DPL_USER    0x3     // User DPL
+#define DPL_USER    0x3     // 用户DPL
 
-// Application segment type bits
-#define STA_X       0x8     // Executable segment
-#define STA_W       0x2     // Writeable (non-executable segments)
-#define STA_R       0x2     // Readable (executable segments)
+// 段类型
+#define STA_X       0x8     // 可执行
+#define STA_W       0x2     // 可写
+#define STA_R       0x2     // 可读
 
 
-// various segment selectors.
-#define SEG_KCODE 1 // kernel code
-#define SEG_KDATA 2 // kernel data+stack
-#define SEG_UCODE 3 // user code
-#define SEG_UDATA 4 // user data+stack
+// 段选择器
+#define SEG_KCODE 1 // 内核代码
+#define SEG_KDATA 2 // 
+#define SEG_UCODE 3 // 用户代码
+#define SEG_UDATA 4 // 
 #define SEG_TSS   5 //
 
 #define STS_T32A    0x9     // Available 32-bit TSS

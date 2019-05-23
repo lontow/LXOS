@@ -17,7 +17,7 @@ bootstart:
  	jne stage2
  	
  	;mov bx ,A20
-    ;call print
+   ; call print
 stage2:
 	
 	call switch_to_pm
@@ -65,8 +65,8 @@ init_pm:
 
 	mov esp,bootstart
 ;start PM
-	;mov ebx,MSG_PROT_MODE
-	;call print_string_pm
+	mov ebx,MSG_LOAD_KERNEL
+	call print_string_pm
 	call bootmain
 	jmp $
 
@@ -111,9 +111,9 @@ DATA_SEG equ gdt_data - gdt_start
 
 BOOT_DRIVE:
 	db 0
-;MSG_LOAD_KERNEL:
+MSG_LOAD_KERNEL:
 
-;	db "Loading kernel into memory",0
+	db "Loading kernel into memory",0
 ;MSG_RETURNED_KERNEL db "Returned from kernel.Error?",0
 
 ;A20:
